@@ -1,543 +1,527 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BASE_URL } from "../config";
 import { getUserFromToken } from "../auth/api";
 import "../styles/generate.css";
 
-// TODO: Replace these mock functions with actual API calls from backend
-
-// Mock function to get user data
-const fetchUserData = async () => {
-  // TODO: Replace with actual API call: GET /api/user/profile
-  return {
-    name: "Alex Admin",
-    email: "alex@viljetech.com",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDxT8pBUYd8voHCL1TUrKZHwwqENTgc1yjZQIWGF9663HcSL1rL-dzXcRlBLfVD1T4obmX9gL5S1pL5snMRQQcLoaiDxZeFu7hz6LappqCaYPo9sabgQURXcVQ0g7cwbgMqHVDPNCjNomUKKzmp6X84xjFPbj_kjrlsDnUjARt85fu3MnZFrjHLxarfI5HjKVS8W_KoJeTJdEenwD2-gsJz1V0wJzU5n4DnNGqQeGB8nmxnr2oGFBzuwhz3C4FXDOBt550rJlwsLQ"
-  };
-};
-
-// Mock function to get AI configuration
-const fetchAIConfig = async () => {
-  // TODO: Replace with actual API call: GET /api/ai/config
-  return {
-    emailIntent: "Announcement about the upcoming company vacation policy update for the summer of 2024. Include key dates and link to the portal.",
-    voiceTone: "Professional",
-    conciseMessaging: true,
-    includeCTA: true,
-    recentDrafts: [
-      { id: 1, subject: "Monthly Newsletter - October 2023", date: "2023-10-25" },
-      { id: 2, subject: "Product Update v2.1", date: "2023-10-24" },
-      { id: 3, subject: "Welcome to ViljeTech", date: "2023-10-23" }
-    ]
-  };
-};
-
-// Mock function to generate email
-const generateEmail = async (config) => {
-  // TODO: Replace with actual API call: POST /api/ai/generate
-  console.log("Generating email with config:", config);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  return {
-    success: true,
-    email: {
-      subject: "Update: Upcoming Changes to Company Vacation Policy",
-      recipient: "All Employees {{all_employees}}",
-      body: `
-Dear Team,
-
-We are excited to share some updates regarding our company vacation policy as we approach the summer season. At ViljeTech, we believe in the importance of work-life balance and want to ensure everyone has the opportunity to recharge.
-
-Starting July 1st, 2024, the following updates will take effect:
-
-• Increased flexibility for 'Summer Fridays' throughout August.
-• Simplified request process via the new ViljeTech Admin Portal.
-• New rollover provisions for unused personal time.
-
-Please take a moment to review the full policy documentation available on the internal portal. If you have any questions, feel free to reach out to the HR team.
-
-Best regards,
-The ViljeTech Leadership Team
-      `.trim(),
-      generatedAt: new Date().toISOString(),
-      tokensUsed: 245,
-      generationTime: 2.8
-    }
-  };
-};
-
-// Mock function to insert into campaign
-const insertIntoCampaign = async (emailData) => {
-  // TODO: Replace with actual API call: POST /api/campaigns/insert
-  console.log("Inserting email into campaign:", emailData);
-  
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    success: true,
-    campaignId: "campaign_" + Date.now(),
-    message: "Email successfully inserted into campaign"
-  };
-};
-
-export default function Generate() {
-  const navigate = useNavigate();
-  
-  const [user, setUser] = useState(null);
-  const [config, setConfig] = useState({
-    emailIntent: "",
-    voiceTone: "Professional",
-    conciseMessaging: false,
-    includeCTA: true,
-    advancedOptionsExpanded: false
-  });
-  
-  const [generatedEmail, setGeneratedEmail] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [inserting, setInserting] = useState(false);
-  const [recentDrafts, setRecentDrafts] = useState([]);
-  const [generationStats, setGenerationStats] = useState({
-    tokensUsed: 0,
-    generationTime: 0
+function Generate() {
+  const [intent, setIntent] = useState("");
+  const [tone, setTone] = useState("Professional");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [links, setLinks] = useState([{ label: "", url: "" }]);
+  const [advancedOptions, setAdvancedOptions] = useState({
+    concise: false,
+    cta: true,
   });
 
+  const [users, setUsers] = useState([]);
+  const [totalRecipients, setTotalRecipients] = useState(0);
+  const [isRecipientPanelOpen, setIsRecipientPanelOpen] = useState(false);
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  const token = sessionStorage.getItem("token");
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+  // Get user name from token
   useEffect(() => {
-    // Load initial data
-    loadInitialData();
+    const user = getUserFromToken();
+    if (user && user.name) {
+      setUserName(user.name);
+    }
   }, []);
 
-  const loadInitialData = async () => {
+  // Load recipients from Upload page (sessionStorage)
+  useEffect(() => {
+    const storedUsers = sessionStorage.getItem("users");
+    const total = sessionStorage.getItem("total_members");
+
+    if (storedUsers && total) {
+      const parsedUsers = JSON.parse(storedUsers);
+      setUsers(parsedUsers);
+      setTotalRecipients(Number(total));
+    }
+  }, []);
+
+  // Add new link field
+  const addLinkField = () => {
+    setLinks([...links, { label: "", url: "" }]);
+  };
+
+  // Update link field
+  const updateLink = (index, field, value) => {
+    const newLinks = [...links];
+    newLinks[index][field] = value;
+    setLinks(newLinks);
+  };
+
+  // Toggle advanced option
+  const toggleAdvancedOption = (option) => {
+    setAdvancedOptions({
+      ...advancedOptions,
+      [option]: !advancedOptions[option],
+    });
+  };
+
+  // Generate email
+  const handleGenerate = async () => {
+    if (!intent.trim()) {
+      alert("Please enter email intent");
+      return;
+    }
+
+    if (users.length === 0) {
+      alert("Please upload recipient list first");
+      return;
+    }
+
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Get user from token first
-      const tokenUser = getUserFromToken();
-      if (tokenUser) {
-        setUser(tokenUser);
-      }
-      
-      // Fetch additional user data from API
-      const userData = await fetchUserData();
-      setUser(prev => ({ ...prev, ...userData }));
-      
-      // Fetch AI configuration
-      const aiConfig = await fetchAIConfig();
-      setConfig({
-        emailIntent: aiConfig.emailIntent,
-        voiceTone: aiConfig.voiceTone,
-        conciseMessaging: aiConfig.conciseMessaging,
-        includeCTA: aiConfig.includeCTA,
-        advancedOptionsExpanded: false
+      const res = await fetch(`${BASE_URL}/generate/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+        body: JSON.stringify({ 
+          intent: intent.trim(), 
+          tone,
+          links: links.filter(link => link.url.trim() !== "").map(link => ({ 
+            label: link.label, 
+            url: link.url 
+          })),
+          options: advancedOptions
+        }),
       });
-      
-      setRecentDrafts(aiConfig.recentDrafts);
-      
-      // Generate initial email
-      await handleGenerate();
-      
-    } catch (error) {
-      console.error("Error loading initial data:", error);
-      // TODO: Add error handling UI
+
+      if (res.status === 401) {
+        alert("Unauthorized! Please login again.");
+        return;
+      }
+
+      const data = await res.json();
+      setSubject(data.subject);
+      setBody(data.email_body);
+    } catch (err) {
+      console.error("Generate email error:", err);
+      alert("Error generating email");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfigChange = (field, value) => {
-    setConfig(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleGenerate = async () => {
+  // Regenerate email
+  const handleRegenerate = async () => {
+    if (!intent.trim()) return;
+    setLoading(true);
     try {
-      setGenerating(true);
-      
-      const result = await generateEmail(config);
-      
-      if (result.success) {
-        setGeneratedEmail(result.email);
-        setGenerationStats({
-          tokensUsed: result.email.tokensUsed,
-          generationTime: result.email.generationTime
-        });
-        
-        // TODO: Add success notification
-        console.log("Email generated successfully!");
-      } else {
-        // TODO: Add error notification
-        console.error("Failed to generate email");
-      }
-    } catch (error) {
-      console.error("Error generating email:", error);
-      // TODO: Add error notification
+      const res = await fetch(`${BASE_URL}/generate/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+        body: JSON.stringify({ 
+          intent: intent.trim(), 
+          tone,
+          links: links.filter(link => link.url.trim() !== "").map(link => ({ 
+            label: link.label, 
+            url: link.url 
+          })),
+          options: advancedOptions
+        }),
+      });
+
+      const data = await res.json();
+      setSubject(data.subject);
+      setBody(data.email_body);
+    } catch (err) {
+      console.error("Regenerate email error:", err);
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
   };
 
-  const handleInsertIntoCampaign = async () => {
-    if (!generatedEmail) {
+  // Copy email to clipboard
+  const copyToClipboard = () => {
+    if (!subject || !body) return;
+    
+    const emailText = `Subject: ${subject}\n\n${body}`;
+    navigator.clipboard.writeText(emailText)
+      .then(() => {
+        alert("Email copied to clipboard!");
+      })
+      .catch(err => {
+        console.error("Failed to copy: ", err);
+      });
+  };
+
+  // Save as template
+  const handleSaveTemplate = () => {
+    if (!subject || !body) {
       alert("Please generate an email first");
       return;
     }
-    
+    alert("Template saved successfully!");
+  };
+
+  // Send emails using stored recipients
+  const handleSend = async () => {
+    if (!subject || !body || users.length === 0) {
+      alert("Missing subject, body, or recipients");
+      return;
+    }
+
+    setLoading(true);
     try {
-      setInserting(true);
-      
-      const result = await insertIntoCampaign(generatedEmail);
-      
-      if (result.success) {
-        // TODO: Add success notification
-        alert("Email successfully inserted into campaign!");
-        
-        // Navigate to campaigns page or show success message
-        console.log("Inserted into campaign:", result.campaignId);
-      } else {
-        // TODO: Add error notification
-        alert("Failed to insert email into campaign");
+      const res = await fetch(`${BASE_URL}/generate/send-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+        body: JSON.stringify({
+          subject,
+          body,
+          users,
+        }),
+      });
+
+      if (res.status === 401) {
+        alert("Unauthorized! Please login again.");
+        return;
       }
-    } catch (error) {
-      console.error("Error inserting into campaign:", error);
-      alert("An error occurred. Please try again.");
+
+      const data = await res.json();
+      setStatus(data);
+      
+      // Save campaign data to sessionStorage for Result page
+      sessionStorage.setItem("send_data", JSON.stringify({
+        subject,
+        body,
+        users,
+        campaign_id: data.campaign_id
+      }));
+      
+    } catch (err) {
+      console.error("Send emails error:", err);
+      alert("Error sending emails");
     } finally {
-      setInserting(false);
+      setLoading(false);
     }
   };
 
-  const handleCopyToClipboard = async () => {
-    if (!generatedEmail) return;
-    
-    const textToCopy = `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`;
-    
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      // TODO: Add success notification
-      alert("Email copied to clipboard!");
-    } catch (error) {
-      console.error("Failed to copy:", error);
-      alert("Failed to copy to clipboard");
-    }
+  // Format email body for display
+  const formatEmailBody = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
   };
-
-  const handleDownload = () => {
-    if (!generatedEmail) return;
-    
-    const blob = new Blob([
-      `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`
-    ], { type: 'text/plain' });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `email-draft-${new Date().toISOString().slice(0, 10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleNewProject = () => {
-    // Reset form for new project
-    setConfig({
-      emailIntent: "",
-      voiceTone: "Professional",
-      conciseMessaging: false,
-      includeCTA: true,
-      advancedOptionsExpanded: false
-    });
-    setGeneratedEmail(null);
-    
-    // TODO: Add confirmation dialog
-    console.log("Starting new project...");
-  };
-
-  const handleRecentDrafts = () => {
-    // TODO: Implement recent drafts modal or page
-    console.log("Opening recent drafts...");
-    // This could open a modal or navigate to drafts page
-  };
-
-  const toggleAdvancedOptions = () => {
-    setConfig(prev => ({
-      ...prev,
-      advancedOptionsExpanded: !prev.advancedOptionsExpanded
-    }));
-  };
-
-  const voiceToneOptions = [
-    "Professional",
-    "Friendly",
-    "Urgent",
-    "Inspirational",
-    "Direct",
-    "Casual",
-    "Formal"
-  ];
 
   return (
-    <div className="generate">
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Loading AI Generator...</div>
-        </div>
-      )}
-
-      <div className="generate-content">
-        {/* Main Header */}
-        <header className="generate-header">
-          <div className="header-left">
-            <h2>AI Email Generator</h2>
-            <p>Draft AI-powered bulk emails with specific tones and intents.</p>
+    <div className="generate-container">
+      <div className="generate-layout">
+        {/* Configuration Panel */}
+        <aside className="config-panel">
+          <div className="config-header">
+            <h3 className="config-title">
+              <span className="material-symbols-outlined config-icon">tune</span>
+              Configuration
+            </h3>
           </div>
           
-          <div className="header-right">
-            <button className="header-button" onClick={handleRecentDrafts}>
-              <span className="material-symbols-outlined button-icon">history</span>
-              Recent Drafts
-            </button>
-            
-            <button className="new-project-button" onClick={handleNewProject}>
-              <span className="material-symbols-outlined button-icon">add</span>
-              New Project
+          <div className="config-content">
+            <label className="config-field">
+              <span className="field-label">Email Intent</span>
+              <textarea
+                className="intent-input"
+                placeholder="e.g., Announcement about the upcoming company vacation policy update..."
+                value={intent}
+                onChange={(e) => setIntent(e.target.value)}
+                rows={5}
+              />
+            </label>
+
+            <label className="config-field">
+              <span className="field-label">Voice Tone</span>
+              <select
+                className="tone-select"
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+              >
+                <option>Professional</option>
+                <option>Friendly</option>
+                <option>Urgent</option>
+                <option>Inspirational</option>
+                <option>Direct</option>
+              </select>
+            </label>
+
+            {/* Advanced Options */}
+            <div className="advanced-options">
+              <span className="advanced-title">Advanced Options</span>
+              <div className="options-list">
+                <label className="option-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={advancedOptions.concise}
+                    onChange={() => toggleAdvancedOption("concise")}
+                  />
+                  <span>Prefer concise messaging</span>
+                </label>
+                <label className="option-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={advancedOptions.cta}
+                    onChange={() => toggleAdvancedOption("cta")}
+                  />
+                  <span>Include clear Call to Action</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Links Section */}
+            <div className="links-section">
+              <span className="links-title">Add Links</span>
+              <div className="links-list">
+                {links.map((link, index) => (
+                  <div key={index} className="link-input-group">
+                    <input
+                      type="text"
+                      className="link-label-input"
+                      placeholder="Label"
+                      value={link.label}
+                      onChange={(e) => updateLink(index, "label", e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="link-url-input"
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={(e) => updateLink(index, "url", e.target.value)}
+                    />
+                  </div>
+                ))}
+                <button className="add-link-button" onClick={addLinkField}>
+                  <span className="material-symbols-outlined">add_link</span>
+                  Add another link
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="generate-button-container">
+            <button
+              className="generate-button"
+              onClick={handleGenerate}
+              disabled={loading || !intent.trim() || users.length === 0}
+            >
+              <span className="material-symbols-outlined">auto_fix_high</span>
+              {loading ? "Generating..." : "Generate Draft"}
             </button>
           </div>
-        </header>
+        </aside>
 
-        {/* Split View Layout */}
-        <div className="split-view">
-          {/* Left Configuration Panel */}
-          <section className="config-panel">
-            <div className="panel-header">
-              <h3>
-                <span className="material-symbols-outlined panel-icon">tune</span>
-                Configuration
-              </h3>
-              <p>Define the scope and style for the AI to follow.</p>
+        {/* Resize Handle */}
+        <div className="resize-handle"></div>
+
+        {/* Email Preview Panel */}
+        <main className="preview-panel">
+          <div className="preview-header">
+            <div className="preview-title-section">
+              <h4 className="preview-section-title">Preview Draft</h4>
+              <div className="preview-status">
+                <span className="status-dot"></span>
+                <span className="status-text">
+                  {subject ? "AI Generated • Just now" : "Awaiting Generation"}
+                </span>
+              </div>
             </div>
-
-            <div className="config-form">
-              {/* Email Intent */}
-              <div className="form-group">
-                <label className="form-label">Email Intent</label>
-                <textarea
-                  className="config-textarea"
-                  placeholder="e.g., Announcement about the upcoming company vacation policy update for the summer of 2024. Include key dates and link to the portal."
-                  value={config.emailIntent}
-                  onChange={(e) => handleConfigChange('emailIntent', e.target.value)}
-                  disabled={generating}
-                />
+            
+            {subject && (
+              <div className="preview-actions">
+                <button className="regenerate-button" onClick={handleRegenerate} disabled={loading}>
+                  <span className="material-symbols-outlined">refresh</span>
+                  Regenerate
+                </button>
+                <button className="icon-button" onClick={copyToClipboard} title="Copy">
+                  <span className="material-symbols-outlined">content_copy</span>
+                </button>
+                <button className="icon-button" title="Download">
+                  <span className="material-symbols-outlined">download</span>
+                </button>
               </div>
+            )}
+          </div>
 
-              {/* Voice Tone */}
-              <div className="form-group">
-                <label className="form-label">Voice Tone</label>
-                <select
-                  className="config-select"
-                  value={config.voiceTone}
-                  onChange={(e) => handleConfigChange('voiceTone', e.target.value)}
-                  disabled={generating}
-                >
-                  {voiceToneOptions.map((tone) => (
-                    <option key={tone} value={tone}>{tone}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Advanced Options */}
-              <div className={`advanced-options ${config.advancedOptionsExpanded ? 'expanded' : ''}`}>
-                <div className="options-header" onClick={toggleAdvancedOptions}>
-                  <span>Advanced Options</span>
-                  <span className="material-symbols-outlined options-icon">expand_more</span>
-                </div>
-                
-                {config.advancedOptionsExpanded && (
-                  <div className="options-content">
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="shorten"
-                        className="checkbox-input"
-                        checked={config.conciseMessaging}
-                        onChange={(e) => handleConfigChange('conciseMessaging', e.target.checked)}
-                        disabled={generating}
-                      />
-                      <label htmlFor="shorten" className="checkbox-label">
-                        Prefer concise messaging
-                      </label>
-                    </div>
-                    
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="cta"
-                        className="checkbox-input"
-                        checked={config.includeCTA}
-                        onChange={(e) => handleConfigChange('includeCTA', e.target.checked)}
-                        disabled={generating}
-                      />
-                      <label htmlFor="cta" className="checkbox-label">
-                        Include clear Call to Action
-                      </label>
-                    </div>
+          <div className="preview-content">
+            {subject ? (
+              <div className="email-preview">
+                <div className="email-header">
+                  <div className="email-field">
+                    <span className="field-label">Subject:</span>
+                    <input
+                      type="text"
+                      className="subject-input"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Generate Button */}
-              <button
-                className="generate-button"
-                onClick={handleGenerate}
-                disabled={generating || !config.emailIntent.trim()}
-              >
-                {generating ? (
-                  <>
-                    <div className="loading-spinner" style={{ width: '20px', height: '20px' }}></div>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined generate-icon">auto_fix_high</span>
-                    Generate Draft
-                  </>
-                )}
-              </button>
-            </div>
-          </section>
-
-          {/* Right Preview Pane */}
-          <section className="preview-pane">
-            <div className="preview-container">
-              {/* Toolbar */}
-              <div className="preview-toolbar">
-                <h4>Preview Draft</h4>
-                
-                <div className="toolbar-actions">
-                  <button 
-                    className="toolbar-button" 
-                    onClick={handleCopyToClipboard}
-                    title="Copy to Clipboard"
-                    disabled={!generatedEmail}
-                  >
-                    <span className="material-symbols-outlined toolbar-icon">content_copy</span>
-                  </button>
-                  
-                  <button 
-                    className="toolbar-button" 
-                    onClick={handleDownload}
-                    title="Download as Template"
-                    disabled={!generatedEmail}
-                  >
-                    <span className="material-symbols-outlined toolbar-icon">download</span>
-                  </button>
-                  
-                  <button 
-                    className="insert-button"
-                    onClick={handleInsertIntoCampaign}
-                    disabled={inserting || !generatedEmail}
-                  >
-                    {inserting ? (
-                      <>
-                        <div className="loading-spinner" style={{ width: '16px', height: '16px' }}></div>
-                        Inserting...
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined insert-icon">send</span>
-                        Insert into Campaign
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Email Preview */}
-              {generatedEmail ? (
-                <div className="email-preview">
-                  {/* Email Header */}
-                  <div className="email-header">
-                    <div className="header-field">
-                      <span className="field-label">Subject:</span>
-                      <input
-                        type="text"
-                        className="subject-input"
-                        value={generatedEmail.subject}
-                        onChange={(e) => setGeneratedEmail(prev => ({ ...prev, subject: e.target.value }))}
-                        placeholder="Email subject..."
-                      />
-                    </div>
-                    
-                    <div className="header-field">
-                      <span className="field-label">To:</span>
+                  <div className="email-field">
+                    <span className="field-label">To:</span>
+                    <div className="recipient-tags">
                       <span className="recipient-tag">
-                        <span className="material-symbols-outlined recipient-icon">group</span>
-                        {generatedEmail.recipient}
+                        All Employees ({totalRecipients})
                       </span>
                     </div>
                   </div>
-
-                  {/* Email Body */}
-                  <div className="email-body">
-                    <div className="email-content">
-                      {generatedEmail.body.split('\n').map((paragraph, index) => {
-                        if (paragraph.trim() === '') return <br key={index} />;
-                        
-                        if (paragraph.startsWith('• ')) {
-                          return (
-                            <ul key={index}>
-                              <li>{paragraph.substring(2)}</li>
-                            </ul>
-                          );
-                        }
-                        
-                        return <p key={index}>{paragraph}</p>;
-                      })}
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="email-footer">
-                      <button className="footer-button">
-                        <span className="material-symbols-outlined footer-icon">edit</span>
-                        Edit Body
-                      </button>
-                      
-                      <button 
-                        className="footer-button"
-                        onClick={() => handleGenerate()} // Regenerate with same config
-                      >
-                        <span className="material-symbols-outlined footer-icon">refresh</span>
-                        Regenerate Section
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              ) : (
-                <div className="empty-state">
-                  <span className="material-symbols-outlined empty-icon">drafts</span>
-                  <h4>No Email Generated Yet</h4>
-                  <p>Configure the AI settings and click "Generate Draft" to create your first email.</p>
+                
+                <div className="email-body">
+                  <div dangerouslySetInnerHTML={{ __html: formatEmailBody(body) }} />
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className="empty-preview">
+                <span className="material-symbols-outlined">draft</span>
+                <p>Your generated email will appear here</p>
+              </div>
+            )}
+          </div>
 
-              {/* Generation Stats */}
-              {generatedEmail && generationStats.tokensUsed > 0 && (
-                <div className="disclaimer">
-                  <span className="material-symbols-outlined disclaimer-icon">info</span>
-                  <p>
-                    Generated in {generationStats.generationTime}s • {generationStats.tokensUsed} tokens • 
-                    AI can make mistakes. Please check important info before sending.
-                  </p>
-                </div>
-              )}
+          <div className="preview-footer">
+            <div className="footer-warning">
+              <span className="material-symbols-outlined">warning</span>
+              <p>Verify placeholders before sending.</p>
             </div>
-          </section>
-        </div>
+            
+            <div className="footer-actions">
+              <button className="save-template-button" onClick={handleSaveTemplate}>
+                Save as Template
+              </button>
+              <button
+                className="approve-send-button"
+                onClick={handleSend}
+                disabled={loading || !subject || users.length === 0}
+              >
+                {loading ? "Sending..." : `Approve and Send (${totalRecipients})`}
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {/* Resize Handle */}
+        <div className="resize-handle"></div>
+
+        {/* Recipient Panel */}
+        <aside className={`recipient-panel ${isRecipientPanelOpen ? "open" : "closed"}`}>
+          <div className="recipient-header">
+            <h3 className="recipient-title">
+              <span className="material-symbols-outlined recipient-icon">group</span>
+              Recipient List ({users.length})
+            </h3>
+            <button
+              className="close-panel-button"
+              onClick={() => setIsRecipientPanelOpen(false)}
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          
+          <div className="recipient-content">
+            <table className="recipient-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user, index) => (
+                  <tr key={index} className={!user.is_valid ? "invalid-user" : ""}>
+                    <td className="user-name">{user.name || "Anonymous"}</td>
+                    <td className="user-email">{user.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="recipient-footer">
+            <p>Showing {users.length} of {users.length} recipients</p>
+          </div>
+        </aside>
       </div>
+
+      {/* Recipient Panel Toggle Button (floating) */}
+      <button
+        className="recipient-toggle-button"
+        onClick={() => setIsRecipientPanelOpen(!isRecipientPanelOpen)}
+        title={isRecipientPanelOpen ? "Close recipient panel" : "Open recipient panel"}
+      >
+        <span className="material-symbols-outlined">
+          {isRecipientPanelOpen ? "chevron_right" : "group"}
+        </span>
+      </button>
+
+      {/* Campaign Status Modal */}
+      {status && (
+        <div className="status-modal-overlay" onClick={() => setStatus(null)}>
+          <div className="status-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="status-modal-header">
+              <h3 className="status-modal-title">
+                <span className="material-symbols-outlined">check_circle</span>
+                Campaign Status
+              </h3>
+              <button className="close-modal-button" onClick={() => setStatus(null)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="status-modal-content">
+              <div className="status-grid">
+                <div className="status-item">
+                  <span className="status-label">Campaign ID:</span>
+                  <span className="status-value">{status.campaign_id}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Subject:</span>
+                  <span className="status-value">{status.subject}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Total Recipients:</span>
+                  <span className="status-value">{status.total}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Sent:</span>
+                  <span className="status-value sent">{status.sent}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Failed:</span>
+                  <span className="status-value failed">{status.failed}</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-label">Status:</span>
+                  <span className={`status-badge ${status.status?.toLowerCase()}`}>
+                    {status.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="modal-actions">
+                <button className="modal-button primary" onClick={() => setStatus(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default Generate;

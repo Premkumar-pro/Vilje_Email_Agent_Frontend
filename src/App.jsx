@@ -30,6 +30,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Signup from "./auth/Signup";
 import Login from "./auth/Login";
+import Home from "./dashboards/Home";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 
 import Sidebar from "./sidebar/sidebar";
@@ -37,9 +38,10 @@ import Sidebar from "./sidebar/sidebar";
 import Dashboard from "./dashboards/dashboard";
 import Upload from "./dashboards/upload";
 import Generate from "./dashboards/Generate";
-import Review from "./dashboards/review";
+import Review from "./dashboards/result";
 import Logs from "./dashboards/logs";
 import Support from "./dashboards/support";
+import SendingStatus from "./dashboards/sending-status";
 
 function App() {
   return (
@@ -49,17 +51,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes with sidebar layout */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Navigate to="/dashboard" />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        {/* Public landing page */}
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
 
         <Route
           path="/dashboard"
@@ -94,8 +88,8 @@ function App() {
           }
         />
 
-        <Route
-          path="/review"
+        {/* <Route
+          path="/result"
           element={
             <ProtectedRoute>
               <Layout>
@@ -103,8 +97,11 @@ function App() {
               </Layout>
             </ProtectedRoute>
           }
+        /> */}
+        <Route
+          path="/sending-status"
+          element={<SendingStatus />}
         />
-
         <Route
           path="/logs"
           element={
@@ -136,7 +133,7 @@ function Layout({ children }) {
   return (
     <>
       <Sidebar />
-      <div style={{ marginLeft: "240px", padding: "20px" }}>
+      <div style={{ marginLeft: "200px", padding: "20px" }}>
         {children}
       </div>
     </>

@@ -34,7 +34,10 @@
   box-sizing: border-box;
 }
 
-html, body, #root, .login-page {
+html,
+body,
+#root,
+.login-page {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -124,7 +127,7 @@ html, body, #root, .login-page {
 
 /* Headline Section */
 .auth-header-section {
-  padding: 40px 32px 16px;
+  padding: 40px 32px 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -132,6 +135,7 @@ html, body, #root, .login-page {
 }
 
 .auth-icon-container {
+  display: none;
   width: 48px;
   height: 48px;
   background-color: rgba(19, 127, 236, 0.1);
@@ -152,7 +156,7 @@ html, body, #root, .login-page {
   font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 8px;
+  /* margin-bottom: 8px; */
 }
 
 .auth-subtitle {
@@ -193,7 +197,7 @@ html, body, #root, .login-page {
   padding: 24px 32px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .form-group {
@@ -366,7 +370,9 @@ html, body, #root, .login-page {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Signup Link */
@@ -466,20 +472,20 @@ html, body, #root, .login-page {
   .auth-header {
     padding: 12px 16px;
   }
-  
+
   .auth-container {
     max-width: 100%;
     margin: 0;
   }
-  
+
   .auth-header-section {
     padding: 32px 20px 12px;
   }
-  
+
   .auth-form {
     padding: 20px;
   }
-  
+
   .error-message,
   .auth-footer {
     padding-left: 20px;

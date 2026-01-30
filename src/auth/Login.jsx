@@ -48,7 +48,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     try {
       const data = await login({ email, password });
       if (data.access_token) {
@@ -129,9 +129,9 @@ export default function Login() {
             <div className="form-group">
               <div className="password-header">
                 <label className="form-label">Password</label>
-                <a className="forgot-link" href="#">
+                {/* <a className="forgot-link" href="#">
                   Forgot?
-                </a>
+                </a> */}
               </div>
               <div className="password-input-container">
                 <input
@@ -172,8 +172,8 @@ export default function Login() {
             </div>
 
             {/* Submit Button */}
-            <button 
-              className="submit-btn" 
+            <button
+              className="submit-btn"
               type="submit"
               disabled={isLoading}
             >
@@ -183,7 +183,7 @@ export default function Login() {
                   <span style={{ marginLeft: "8px" }}>Signing In...</span>
                 </>
               ) : (
-                "Sign In"
+                "LogIn"
               )}
             </button>
 

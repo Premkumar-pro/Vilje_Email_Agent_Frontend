@@ -74,15 +74,15 @@ export default function Sidebar() {
             <span>Generate</span>
           </NavLink>
 
-          <NavLink 
-            to="/review" 
+          {/* <NavLink 
+            to="/result" 
             className={({ isActive }) => 
               isActive ? "menu-item active" : "menu-item"
             }
           >
             <span className="material-symbols-outlined">description</span>
-            <span>Review</span>
-          </NavLink>
+            <span>Result</span>
+          </NavLink> */}
 
           <NavLink 
             to="/logs" 
