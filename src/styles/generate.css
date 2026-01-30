@@ -32,7 +32,7 @@
   height: 100vh;
   background: var(--background-light);
   position: relative;
-  margin-left: 200px;
+  /* margin-left: 200px; */
   width: calc(100% - 200px);
 }
 
@@ -876,7 +876,7 @@
   .generate-container {
     background: var(--background-dark);
   }
-  
+
   .config-panel,
   .preview-header,
   .email-preview,
@@ -887,7 +887,7 @@
     border-color: var(--border-dark);
     color: var(--white);
   }
-  
+
   .intent-input,
   .tone-select,
   .link-label-input,
@@ -897,40 +897,40 @@
     border-color: var(--border-dark);
     color: var(--white);
   }
-  
+
   .recipient-table thead {
     background: rgba(30, 41, 59, 0.5);
   }
-  
+
   .recipient-table tbody tr:hover {
     background: rgba(30, 41, 59, 0.3);
   }
-  
+
   .status-item {
     background: rgba(30, 41, 59, 0.5);
   }
-  
+
   .status-modal-overlay {
     background: rgba(0, 0, 0, 0.7);
   }
-  
+
   .close-panel-button:hover,
   .close-modal-button:hover {
     background: rgba(30, 41, 59, 0.5);
   }
-  
+
   .regenerate-button,
   .icon-button {
     background: rgba(30, 41, 59, 0.5);
     border-color: var(--border-dark);
     color: var(--white);
   }
-  
+
   .regenerate-button:hover:not(:disabled),
   .icon-button:hover {
     border-color: var(--primary-color);
   }
-  
+
   ::-webkit-scrollbar-thumb {
     background: var(--border-dark);
   }
@@ -942,7 +942,7 @@
     margin-left: 0;
     width: 100%;
   }
-  
+
   .status-modal-overlay {
     left: 0;
   }
@@ -952,23 +952,23 @@
   .generate-layout {
     flex-direction: column;
   }
-  
+
   .config-panel {
     width: 100%;
     height: auto;
     max-height: 50vh;
   }
-  
+
   .resize-handle {
     width: 100%;
     height: 4px;
     cursor: row-resize;
   }
-  
+
   .preview-panel {
     min-height: 400px;
   }
-  
+
   .recipient-panel {
     position: fixed;
     right: 0;

@@ -133,7 +133,7 @@ function Layout({ children }) {
   return (
     <>
       <Sidebar />
-      <div style={{ marginLeft: "200px", padding: "20px" }}>
+      <div style={{ marginLeft: "auto", padding: "20px", width: "calc(100% - 252px)", height: "100vh", boxSizing: "border-box" }}>
         {children}
       </div>
     </>

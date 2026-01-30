@@ -27,10 +27,11 @@
 .dashboard-container {
   font-family: 'Inter', sans-serif;
   background: var(--background-light);
-  min-height: 100vh;
-  padding: 2rem;
-  margin-left: 200px;
-  width: calc(100% - 200px);
+  height: 100%;
+  overflow-y: scroll;
+  /* margin-right: 20px; */
+  /* min-height: 100vh;
+  width: calc(100% - 200px); */
 }
 
 /* Header */
@@ -549,14 +550,14 @@
   .dashboard-container {
     background: var(--background-dark);
   }
-  
+
   .stat-card,
   .activity-section,
   .full-view-container {
     background: #1a242f;
     border-color: var(--border-dark);
   }
-  
+
   .dashboard-title,
   .stat-value,
   .stat-date,
@@ -565,7 +566,7 @@
   .full-view-title {
     color: var(--white);
   }
-  
+
   .dashboard-subtitle,
   .stat-label,
   .stat-campaign,
@@ -573,58 +574,58 @@
   .pagination-info {
     color: #9ca3af;
   }
-  
+
   .activity-table thead,
   .full-view-table thead,
   .pagination-controls {
     background: rgba(31, 41, 55, 0.5);
   }
-  
+
   .activity-table th,
   .full-view-table th {
     color: #9ca3af;
   }
-  
+
   .activity-table tbody tr:hover,
   .full-view-table tbody tr:hover {
     background: rgba(31, 41, 55, 0.5);
   }
-  
+
   .pagination-btn {
     background: #2d3748;
     border-color: var(--border-dark);
     color: #9ca3af;
   }
-  
+
   .pagination-btn:hover:not(:disabled) {
     background: #374151;
     border-color: var(--primary-color);
     color: var(--primary-color);
   }
-  
+
   .pagination-btn.active {
     background: var(--primary-color);
     color: var(--white);
   }
-  
+
   .dashboard-footer {
     border-color: var(--border-dark);
   }
-  
+
   .full-view-overlay {
     background: rgba(0, 0, 0, 0.7);
   }
-  
+
   .close-full-view:hover {
     background: #2d3748;
   }
-  
+
   /* Scrollbar in dark mode */
   .full-view-content::-webkit-scrollbar-thumb,
   .activity-section .activity-table-container::-webkit-scrollbar-thumb {
     background: var(--border-dark);
   }
-  
+
   .full-view-content::-webkit-scrollbar-thumb:hover,
   .activity-section .activity-table-container::-webkit-scrollbar-thumb:hover {
     background: #4b5563;
@@ -637,7 +638,7 @@
     margin-left: 0;
     width: 100%;
   }
-  
+
   .full-view-overlay {
     left: 0;
   }
@@ -647,49 +648,49 @@
   .dashboard-container {
     padding: 1rem;
   }
-  
+
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .activity-table-container {
     overflow-x: auto;
   }
-  
+
   .full-view-container {
     width: 95%;
     max-height: 80vh;
   }
-  
+
   .full-view-header {
     padding: 1rem;
   }
-  
+
   .full-view-content {
     max-height: calc(80vh - 60px);
   }
-  
+
   .full-view-table {
     min-width: 800px;
   }
-  
+
   .dashboard-footer {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
+
   .pagination-controls {
     flex-wrap: wrap;
     gap: 0.25rem;
   }
-  
+
   .pagination-btn {
     min-width: 2rem;
     height: 2rem;

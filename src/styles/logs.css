@@ -17,7 +17,7 @@
   --error-color: #ef4444;
   --warning-color: #f59e0b;
   --info-color: #3b82f6;
-  
+
   /* Sidebar Colors */
   --sidebar-bg-light: #ffffff;
   --sidebar-bg-dark: #101922;
@@ -34,16 +34,18 @@
 .logs-container {
   font-family: 'Inter', sans-serif;
   background: var(--background-light);
-  min-height: 100vh;
+  /* min-height: 100vh; */
+  height: 100%;
+  overflow-y: scroll;
   color: var(--text-primary);
-  margin-left: 200px;
-  width: calc(100% - 200px);
+  /* margin-left: 200px; */
+  /* width: calc(100% - 200px); */
 }
 
 .logs-content {
-  max-width: 1200px;
+  /* max-width: 1200px; */
   margin: 0 auto;
-  padding: 2.5rem 2rem;
+  /* padding: 2.5rem 2rem; */
 }
 
 /* Page Header */
@@ -531,101 +533,101 @@
   .logs-container {
     background: var(--background-dark);
   }
-  
+
   .page-title {
     color: var(--white);
   }
-  
+
   .user-welcome {
     color: var(--primary-color);
   }
-  
+
   .stats-info {
     color: #94a3b8;
   }
-  
+
   .export-button,
   .filters-section,
   .table-container {
     background: var(--background-dark);
     border-color: var(--border-dark);
   }
-  
+
   .export-button {
     color: var(--white);
   }
-  
+
   .export-button:hover {
     background: #1e293b;
   }
-  
+
   .search-input {
     background: #1c2a38;
     color: var(--white);
   }
-  
+
   .filter-chip {
     background: #1c2a38;
     border-color: var(--border-dark);
     color: var(--white);
   }
-  
+
   .filter-chip:hover {
     background: #253545;
   }
-  
+
   .filter-chip.active {
     background: var(--primary-color);
     color: var(--white);
   }
-  
+
   .table-header {
     background: rgba(28, 42, 56, 0.5);
     color: #94a3b8;
     border-color: var(--border-dark);
   }
-  
+
   .table-row {
     border-color: var(--border-dark);
   }
-  
+
   .table-row:hover {
     background-color: rgba(28, 42, 56, 0.4);
   }
-  
+
   .subject-text {
     color: var(--white);
   }
-  
+
   .campaign-cell,
   .date-cell,
   .recipients-cell {
     color: #94a3b8;
   }
-  
+
   .pagination-btn {
     background: #1c2a38;
     border-color: var(--border-dark);
     color: var(--white);
   }
-  
+
   .pagination-btn:hover:not(:disabled) {
     background: #253545;
   }
-  
+
   .pagination-info {
     color: #94a3b8;
   }
-  
+
   .intelligence-section {
     background: linear-gradient(135deg, rgba(19, 127, 236, 0.1) 0%, rgba(19, 127, 236, 0.2) 100%);
     border-color: rgba(19, 127, 236, 0.3);
   }
-  
+
   .intelligence-text {
     color: rgba(255, 255, 255, 0.9);
   }
-  
+
   .intelligence-stat {
     background: rgba(28, 42, 56, 0.5);
     color: rgba(255, 255, 255, 0.9);
@@ -638,7 +640,7 @@
     margin-left: 0;
     width: 100%;
   }
-  
+
   .logs-content {
     padding: 1.5rem 1rem;
   }
@@ -650,13 +652,13 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .pagination-container {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .intelligence-stats {
     flex-direction: column;
   }
